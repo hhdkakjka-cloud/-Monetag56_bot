@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Earn Zone - Daily Rewards</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src='//libtl.com/sdk.js' data-zone='11187742' data-sdk='show_11187742'></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f0f1a;
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Stars background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 15%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,0.3) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 20px;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6C63FF, #3ECFCF);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .user-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .user-level {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 1px;
+  }
+
+  .refresh-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #fff;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover { background: rgba(255,255,255,0.14); }
+  .refresh-btn:active { transform: scale(0.96); }
+
+  .spin { animation: spin 0.6s linear; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Balance Card */
+  .balance-card {
+    background: linear-gradient(135deg, #1a1a3e 0%, #0d1f3c 100%);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .balance-card::after {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(108, 99, 255, 0.12);
+  }
+
+  .balance-label {
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+
+  .balance-amount {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6C63FF, #3ECFCF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+
+  .balance-unit {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  .balance-stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .stat { text-align: center; }
+  .stat-val { font-size: 16px; font-weight: 700; color: #fff; }
+  .stat-lbl { font-size: 11px; color: #666; margin-top: 2px; }
+
+  /* Ad zone */
+  .ad-zone {
+    background: rgba(255,255,255,0.04);
+    border: 1px dashed rgba(108, 99, 255, 0.4);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .ad-label {
+    position: absolute;
+    top: 6px; left: 10px;
+    font-size: 9px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .ad-placeholder {
+    text-align: center;
+    color: #444;
+    font-size: 13px;
+  }
+
+  /* Main Action Button */
+  .action-area {
+    margin-bottom: 16px;
+  }
+
+  .watch-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(135deg, #6C63FF 0%, #3ECFCF 100%);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .watch-btn:active { transform: scale(0.98); }
+
+  .watch-btn.loading {
+    background: linear-gradient(135deg, #3a3680, #1e8080);
+    cursor: not-allowed;
+  }
+
+  .watch-btn .btn-icon { font-size: 22px; }
+
+  .btn-pulse {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    height: 6px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6C63FF, #3ECFCF);
+    border-radius: 8px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    color: #666;
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  /* Tasks */
+  .section-title {
+    font-size: 13px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .task-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .task-item:hover { background: rgba(255,255,255,0.07); }
+  .task-item.done { opacity: 0.5; pointer-events: none; }
+
+  .task-left { display: flex; align-items: center; gap: 12px; }
+  .task-icon { font-size: 22px; }
+  .task-name { font-size: 14px; font-weight: 600; }
+  .task-desc { font-size: 11px; color: #777; margin-top: 2px; }
+
+  .task-reward {
+    background: rgba(108, 99, 255, 0.2);
+    color: #a09dff;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .task-item.done .task-reward {
+    background: rgba(62, 207, 207, 0.15);
+    color: #3ECFCF;
+  }
+
+  /* Bottom second ad */
+  .ad-zone-2 {
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed rgba(62, 207, 207, 0.3);
+    border-radius: 14px;
+    padding: 14px;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: rgba(30,30,60,0.95);
+    border: 1px solid rgba(108, 99, 255, 0.5);
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: transform 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Earning animation */
+  .earn-pop {
+    position: fixed;
+    font-size: 20px;
+    font-weight: 800;
+    color: #3ECFCF;
+    pointer-events: none;
+    animation: earnFloat 1.2s ease-out forwards;
+    z-index: 999;
+  }
+
+  @keyframes earnFloat {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-80px) scale(1.3); }
+  }
+
+  /* Timer display */
+  .timer-display {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #aaa;
+  }
+  .timer-display.visible { display: flex; }
+  .timer-num { color: #6C63FF; font-weight: 700; font-size: 16px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="user-info">
+      <div class="avatar" id="avatarEl">👤</div>
+      <div>
+        <div class="user-name" id="userNameEl">Loading...</div>
+        <div class="user-level">🏅 Earner Level 1</div>
+      </div>
+    </div>
+    <button class="refresh-btn" onclick="refreshPage()">
+      <span id="refreshIcon">🔄</span> Refresh
+    </button>
+  </div>
+
+  <!-- Balance -->
+  <div class="balance-card">
+    <div class="balance-label">মোট আয়</div>
+    <div class="balance-amount" id="balanceEl">0</div>
+    <div class="balance-unit">Points</div>
+    <div class="balance-stats">
+      <div class="stat">
+        <div class="stat-val" id="todayEl">0</div>
+        <div class="stat-lbl">আজকের আয়</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="adsEl">0</div>
+        <div class="stat-lbl">Ads দেখা</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="streakEl">1</div>
+        <div class="stat-lbl">দিনের ধারা 🔥</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ad Zone TOP (Monetag Interstitial/Banner goes here) -->
+  <div class="ad-zone">
+    <div class="ad-label">sponsored</div>
+    <!-- ✅ Monetag Ad Unit Code এখানে বসান -->
+    <!-- <script src="//YOUR_MONETAG_SCRIPT_URL"></script> -->
+    <div class="ad-placeholder" id="adPlaceholder1">📢 Ad Loading...</div>
+  </div>
+
+  <!-- Main Watch Button -->
+  <div class="action-area">
+    <button class="watch-btn" id="watchBtn" onclick="watchAd()">
+      <div class="btn-pulse"></div>
+      <span class="btn-icon">▶️</span>
+      <span id="watchBtnText">Ad দেখে আয় করুন</span>
+    </button>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="timer-display" id="timerDisplay">
+      ⏳ অপেক্ষা করুন <span class="timer-num" id="timerNum">30</span> সেকেন্ড
+    </div>
+    <div class="progress-label" id="progressLabel">প্রতিটি Ad দেখায় +10 Points</div>
+  </div>
+
+  <!-- Tasks -->
+  <div class="section-title">📋 দৈনিক কাজ</div>
+  <div class="task-list" id="taskList">
+    <div class="task-item" id="task1" onclick="completeTask(1, 20, this)">
+      <div class="task-left">
+        <div class="task-icon">🎯</div>
+        <div>
+          <div class="task-name">প্রথম Ad দেখুন</div>
+          <div class="task-desc">আজকের প্রথম বিজ্ঞাপন</div>
+        </div>
+      </div>
+      <div class="task-reward">+20</div>
+    </div>
+    <div class="task-item" id="task2" onclick="completeTask(2, 50, this)">
+      <div class="task-left">
+        <div class="task-icon">🔥</div>
+        <div>
+          <div class="task-name">৫টি Ad দেখুন</div>
+          <div class="task-desc">আজকে ৫টি ad সম্পন্ন করুন</div>
+        </div>
+      </div>
+      <div class="task-reward">+50</div>
+    </div>
+    <div class="task-item" id="task3" onclick="completeTask(3, 30, this)">
+      <div class="task-left">
+        <div class="task-icon">👥</div>
+        <div>
+          <div class="task-name">বন্ধুকে আমন্ত্রণ</div>
+          <div class="task-desc">Referral link শেয়ার করুন</div>
+        </div>
+      </div>
+      <div class="task-reward">+30</div>
+    </div>
+    <div class="task-item" id="task4" onclick="completeTask(4, 15, this)">
+      <div class="task-left">
+        <div class="task-icon">📅</div>
+        <div>
+          <div class="task-name">Daily Check-in</div>
+          <div class="task-desc">প্রতিদিন লগইন করুন</div>
+        </div>
+      </div>
+      <div class="task-reward">+15</div>
+    </div>
+  </div>
+
+  <!-- Ad Zone BOTTOM (Monetag second ad unit) -->
+  <div class="ad-zone-2">
+    <div class="ad-label">advertisement</div>
+    <!-- ✅ Monetag ২য় Ad Unit এখানে বসান -->
+    <!-- <script src="//YOUR_MONETAG_SCRIPT_URL_2"></script> -->
+    <div class="ad-placeholder" id="adPlaceholder2">📢 Ad Loading...</div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================
+// State
+// =====================
+let balance = parseInt(localStorage.getItem('balance') || '0');
+let todayEarned = parseInt(localStorage.getItem('todayEarned') || '0');
+let adsWatched = parseInt(localStorage.getItem('adsWatched') || '0');
+let streak = parseInt(localStorage.getItem('streak') || '1');
+let completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '[]');
+let isWatching = false;
+let watchTimer = null;
+
+// =====================
+// Telegram Init
+// =====================
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  const user = tg.initDataUnsafe?.user;
+  if (user) {
+    const name = user.first_name || 'User';
+    document.getElementById('userNameEl').textContent = name;
+    document.getElementById('avatarEl').textContent = name.charAt(0).toUpperCase();
+  } else {
+    document.getElementById('userNameEl').textContent = 'EarnZone User';
+    document.getElementById('avatarEl').textContent = 'E';
+  }
+} else {
+  document.getElementById('userNameEl').textContent = 'EarnZone User';
+  document.getElementById('avatarEl').textContent = 'E';
+}
+
+// =====================
+// UI Update
+// =====================
+function updateUI() {
+  document.getElementById('balanceEl').textContent = balance.toLocaleString();
+  document.getElementById('todayEl').textContent = todayEarned;
+  document.getElementById('adsEl').textContent = adsWatched;
+  document.getElementById('streakEl').textContent = streak;
+
+  // Restore completed tasks
+  completedTasks.forEach(id => {
+    const el = document.getElementById('task' + id);
+    if (el) {
+      el.classList.add('done');
+      el.querySelector('.task-reward').textContent = '✅';
+    }
+  });
+}
+
+// =====================
+// Watch Ad (Manual — user clicks, Monetag interstitial opens)
+// =====================
+function watchAd() {
+  if (isWatching) return;
+  isWatching = true;
+
+  const btn = document.getElementById('watchBtn');
+  const progressBar = document.getElementById('progressBar');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const timerNum = document.getElementById('timerNum');
+  const progressLabel = document.getElementById('progressLabel');
+
+  btn.classList.add('loading');
+  document.getElementById('watchBtnText').textContent = 'Ad চলছে...';
+  timerDisplay.classList.add('visible');
+
+  // ✅ Monetag Interstitial Ad trigger
+  if (typeof show_11187742 === 'function') {
+    show_11187742();
+  }
+
+  let seconds = 30;
+  let progress = 0;
+  timerNum.textContent = seconds;
+  progressBar.style.width = '0%';
+
+  watchTimer = setInterval(() => {
+    seconds--;
+    progress = ((30 - seconds) / 30) * 100;
+    timerNum.textContent = seconds;
+    progressBar.style.width = progress + '%';
+
+    if (seconds <= 0) {
+      clearInterval(watchTimer);
+      adComplete();
+    }
+  }, 1000);
+}
+
+function adComplete() {
+  const earned = 10;
+  balance += earned;
+  todayEarned += earned;
+  adsWatched += 1;
+
+  localStorage.setItem('balance', balance);
+  localStorage.setItem('todayEarned', todayEarned);
+  localStorage.setItem('adsWatched', adsWatched);
+
+  updateUI();
+  showEarnPop('+' + earned);
+  showToast('✅ +' + earned + ' Points আয় হয়েছে!');
+
+  // Task check
+  if (adsWatched === 1 && !completedTasks.includes(1)) autoCompleteTask(1, 20);
+  if (adsWatched >= 5 && !completedTasks.includes(2)) autoCompleteTask(2, 50);
+
+  // Reset button
+  const btn = document.getElementById('watchBtn');
+  btn.classList.remove('loading');
+  document.getElementById('watchBtnText').textContent = 'Ad দেখে আয় করুন';
+  document.getElementById('timerDisplay').classList.remove('visible');
+  document.getElementById('progressBar').style.width = '0%';
+  isWatching = false;
+}
+
+// =====================
+// Tasks
+// =====================
+function completeTask(id, reward, el) {
+  if (completedTasks.includes(id)) return;
+  if (id === 1 && adsWatched < 1) { showToast('⚠️ আগে একটি Ad দেখুন'); return; }
+  if (id === 2 && adsWatched < 5) { showToast('⚠️ আরও ' + (5 - adsWatched) + 'টি Ad দেখুন'); return; }
+  if (id === 3) { shareReferral(); return; }
+
+  completedTasks.push(id);
+  localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+  balance += reward;
+  todayEarned += reward;
+  localStorage.setItem('balance', balance);
+  localStorage.setItem('todayEarned', todayEarned);
+
+  el.classList.add('done');
+  el.querySelector('.task-reward').textContent = '✅';
+  updateUI();
+  showEarnPop('+' + reward);
+  showToast('🎉 Task সম্পন্ন! +' + reward + ' Points');
+}
+
+function autoCompleteTask(id, reward) {
+  completedTasks.push(id);
+  localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+  balance += reward;
+  todayEarned += reward;
+  localStorage.setItem('balance', balance);
+  localStorage.setItem('todayEarned', todayEarned);
+  const el = document.getElementById('task' + id);
+  if (el) {
+    el.classList.add('done');
+    el.querySelector('.task-reward').textContent = '✅';
+  }
+  updateUI();
+  showToast('🎉 Task auto-complete! +' + reward + ' Points');
+}
+
+function shareReferral() {
+  const userId = tg?.initDataUnsafe?.user?.id || 'user123';
+  const link = 'https://t.me/YourBotUsername?start=ref_' + userId;
+  if (tg) {
+    tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent('🎁 EarnZone-এ যোগ দাও, বিনামূল্যে আয় করো!'));
+  } else {
+    navigator.clipboard?.writeText(link);
+    showToast('📋 Referral link কপি হয়েছে!');
+  }
+}
+
+// =====================
+// Refresh
+// =====================
+function refreshPage() {
+  const icon = document.getElementById('refreshIcon');
+  icon.classList.add('spin');
+  setTimeout(() => {
+    location.reload();
+  }, 500);
+}
+
+// =====================
+// Toast
+// =====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// =====================
+// Earn Float Animation
+// =====================
+function showEarnPop(text) {
+  const el = document.createElement('div');
+  el.className = 'earn-pop';
+  el.textContent = text;
+  el.style.left = (Math.random() * 60 + 20) + '%';
+  el.style.top = '40%';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+// =====================
+// Init
+// =====================
+updateUI();
+</script>
+</body>
+</html>
